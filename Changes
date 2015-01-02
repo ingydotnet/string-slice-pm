@@ -1,4 +1,10 @@
 ---
+version: 0.03
+date:    Fri Jan  2 09:31:02 PST 2015
+changes:
+- DZ:P:InlineModule needed a fix
+- bundle stuff was missing in inc
+---
 version: 0.02
 date:    Fri Jan  2 01:31:47 PST 2015
 changes:
