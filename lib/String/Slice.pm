@@ -1,95 +1,96 @@
 use strict;
 package String::Slice;
 
+our $VERSION = '0.02';
+
 use Exporter 'import';
 our @EXPORT = qw(slice);
 
-our $VERSION = '0.01';
+use String::Slice::Inline C => <<'...';
+int slice (SV* dummy, ...) {
+  dVAR; dXSARGS;
+  if (items < 2 || items > 4)
+    croak("Usage: String::Slice::slice($slice, $string, $offset=0, $length=-1)");
+  {
+    SV* slice = ST(0);
+    SV* string = ST(1);
+    I32 offset = items < 3 ? 0 : (I32)SvIV(ST(2));
+    STRLEN length = items < 4 ? -1 : (STRLEN)SvUV(ST(3));
+    dXSTARG;
 
-use XSLoader;
-XSLoader::load(__PACKAGE__, $VERSION);
+    U8* slice_ptr;
+    U8* slice_end;
+    U8* string_ptr;
+    U8* string_end;
+    U8* base_ptr;
+
+    // Force string and slice to be string-type-scalars (SVt_PV)
+    SvUPGRADE(slice, SVt_PV);
+    SvUPGRADE(string, SVt_PV);
+
+    // Make sure string is a valid string pointer
+    if (! SvPOK(string))
+      croak("buffer is not a string in String::Slice::slice()");
+
+    // Get current pointers and string length
+    slice_ptr = SvPVX(slice);
+    string_ptr = SvPVX(string);
+    string_end = SvEND(string);
+
+    // Is this a new slice? Start at beginning of string.
+    if (slice_ptr < string_ptr || slice_ptr >= string_end) {
+      // Link the refcnt of string to slice. rafl++
+      sv_magicext(slice, string, PERL_MAGIC_ext, NULL, NULL, 0);
+
+      base_ptr = string_ptr;
+    }
+    // Existing slice. Use it as starting point.
+    else
+      base_ptr = slice_ptr;
+
+    // Hop to the new offset
+    slice_ptr = utf8_hop(base_ptr, offset);
+
+    // New offset is out of bounds
+    if (slice_ptr < string_ptr || slice_ptr >= string_end) {
+      // Reset the slice
+      SvPV_set(slice, 0);
+      SvCUR_set(slice, 0);
+
+      // Failure
+      return 0;
+    }
+    // New offset is OK.
+    else {
+      // Set the slice pointer.
+      SvPV_set(slice, slice_ptr);
+
+      // Calculate the proper byte length for the utf8 slice
+
+      // If requested number of chars is negative (default) or too big,
+      // use the entire remainder of the string.
+      if (length < 0 || length >= utf8_distance(string_end, slice_ptr)) {
+        slice_end = string_end;
+      }
+      // Else find the end of utf8 slice
+      else {
+        slice_end = utf8_hop(slice_ptr, length);
+      }
+      // Set the length of the slice buffer in bytes
+      SvCUR_set(slice, slice_end - slice_ptr);
+
+      // Special way to tell perl it doesn't own the slice memory. jdb++
+      SvLEN_set(slice, 0);
+
+      // Make sure the SVs are readonly (or bad things will happen!)
+      SvREADONLY_on(slice);
+      SvREADONLY_on(string);
+
+      // Success
+      return 1;
+    }
+  }
+}
+...
 
 1;
-
-=encoding utf8
-
-=head1 NAME
-
-String::Slice - Shared Memory Slices of Bigger Strings
-
-=head1 SYNOPSIS
-
-    use String::Slice;
-
-    my $buffer = fetch_enormous_string;
-    my $slice;
-
-    # Make $slice reference chars 101-125 of $buffer
-    slice($slice, $buffer, 101, 25);
-
-    # Make $slice reference chars 126-175 of $buffer
-    slice($slice, $buffer, 25, 50);
-
-    # Make $slice reference chars 120 to end of $buffer
-    slice($slice, $buffer, -6);
-
-    # Look for $pattern in $buffer,
-    # at each 100 byte starting point
-    $slice = '';    # Reset $slice
-    for (my $i = 0; slice($slice, $buffer, $i); $i += 100) {
-        if ($slice =~ /^$pattern/) { ... do it ... }
-    }
-
-=head1 DESCRIPTION
-
-Processing large strings in Perl is inefficient because to access any smaller
-portion of a buffer you need to make a copy of that portion.
-
-This module lets you make a string scalar point to a portion of the content of
-another string scalar.
-
-The primary goal of this module is to make the parsing large data much faster
-in Perl.
-
-=head1 API
-
-String::Slice exports one function: C<slice>. It can be called in a few
-different ways:
-
-    slice($slice_variable, $big_buffer_variable, $char_offset, $char_length)
-
-This effectively makes C<$slice_variable> a substr of the buffer. The offset
-defaults to 0, and if no length is given, the slice goes to the end of the
-buffer. One side effect of this function is that both strings will become
-readonly, and the memory will not be freed until they both go out of scope.
-
-If C<$slice> is already a slice of C<$buffer> then this call:
-
-    slice($slice, $buffer, $offset, $length)
-
-will move the offset forward by the specified number (or backwards if the
-offset is negative).
-
-If length is too long, the slice will go to the end of the buffer.
-
-The C<slice> function returns 1 on success and 0 on failure. Failure occurs if
-the requested offset is invalid (less than the start or greater than or equal
-to the end of the buffer).
-
-=head1 CREDIT
-
-Thanks go out to Jan Dubois and Florian Ragwitz for help on how to do this
-right.
-
-=head1 AUTHORS
-
-Ingy döt Net (ingy) <ingy@cpan.org>
-
-=head1 COPYRIGHT
-
-Copyright (c) 2012 Ingy döt Net
-
-=head1 LICENSE
-
-This library is free software and may be distributed under the same terms as
-perl itself.

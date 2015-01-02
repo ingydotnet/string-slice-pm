@@ -1,4 +1,10 @@
 ---
+version: 0.02
+date:    Fri Jan  2 01:31:47 PST 2015
+changes:
+- Modernize to Zilla::Dist
+- Convert XS to Inline::Module
+---
 version: 0.01
 date:    Tue Oct 16 00:02:29 PDT 2012
 changes:

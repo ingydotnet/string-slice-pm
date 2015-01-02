@@ -1,0 +1,30 @@
+=meta: 0.0.1
+
+name: String-Slice
+version: 0.02
+abstract: Shared Memory Slices of Bigger Strings
+homepage: https://metacpan.org/release/String-Slice
+license: perl
+copyright: 2012-2015
+
+author:
+  name: Ingy döt Net
+  email: ingy@cpan.org
+  github: ingydotnet
+  twitter: ingydotnet
+  freenode: ingy
+  homepage: http://ingy.net
+
+requires:
+  perl: 5.8.1
+
+devel:
+  git: https://github.com/ingydotnet/string-slice-pm
+  bug: https://github.com/ingydotnet/string-slice-pm/issues
+  irc: irc.perl.org#inline
+
+badge: travis
+
+=zild:
+  inline:
+    module: String::Slice
