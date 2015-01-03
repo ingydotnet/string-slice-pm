@@ -1,7 +1,7 @@
 use strict;
 package String::Slice;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use Exporter 'import';
 our @EXPORT = qw(slice);
@@ -25,6 +25,9 @@ int slice (SV* dummy, ...) {
     U8* base_ptr;
 
     // Force string and slice to be string-type-scalars (SVt_PV)
+#if PERL_VERSION > 18
+    if(SvIsCOW(slice)) sv_force_normal(slice);
+#endif
     SvUPGRADE(slice, SVt_PV);
     SvUPGRADE(string, SVt_PV);
 

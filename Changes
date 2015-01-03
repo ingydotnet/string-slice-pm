@@ -1,4 +1,10 @@
 ---
+version: 0.04
+date:    Sat Jan  3 15:41:47 PST 2015
+changes:
+- Fix > 5.18 THINKFIRST issues.
+- Patch - https://rt.cpan.org/Public/Ticket/Attachment/WithHeaders/757962
+---
 version: 0.03
 date:    Fri Jan  2 09:31:02 PST 2015
 changes:
