@@ -13,6 +13,11 @@ String::Slice - Shared Memory Slices of Bigger Strings
 =for html
 <a href="https://travis-ci.org/ingydotnet/string-slice-pm"><img src="https://travis-ci.org/ingydotnet/string-slice-pm.png" alt="string-slice-pm"></a>
 
+=head1 Version
+
+This document describes L<String::Slice> version B<0.04>.
+";
+
 =head1 Synopsis
 
     use String::Slice;

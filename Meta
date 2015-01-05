@@ -4,6 +4,7 @@ name: String-Slice
 version: 0.04
 abstract: Shared Memory Slices of Bigger Strings
 homepage: https://metacpan.org/release/String-Slice
+language: perl
 license: perl
 copyright: 2012-2015
 
