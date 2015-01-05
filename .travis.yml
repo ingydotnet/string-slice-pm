@@ -21,6 +21,7 @@ perl:
 install:
 - cpanm --quiet --notest
   Devel::Cover::Report::Coveralls
+  Inline::Module
 
 script:
 - true && [ ! -e test/ ] ||

@@ -19,6 +19,10 @@ author:
 requires:
   perl: 5.8.1
 
+test:
+  requires:
+    Inline::Module: 0.33
+
 devel:
   git: https://github.com/ingydotnet/string-slice-pm
   bug: https://github.com/ingydotnet/string-slice-pm/issues
