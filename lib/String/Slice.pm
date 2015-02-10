@@ -68,6 +68,9 @@ int slice (SV* dummy, ...) {
       // Set the slice pointer.
       SvPV_set(slice, slice_ptr);
 
+      // Let it know it's an SvPV (if it doesn't already)
+      SvPOK_on(slice);
+
       // Calculate the proper byte length for the utf8 slice
 
       // If requested number of chars is negative (default) or too big,
