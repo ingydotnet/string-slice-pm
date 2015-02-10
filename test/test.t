@@ -38,4 +38,10 @@ is $slice, 'Net', 'Advance matches text';
 $return = slice($slice, $string2, -100);
 is $return, 0, 'Hop too far back fails';
 
+# Don't have to initialize slice to a string
+my $other_slice;
+$return = slice($other_slice, $string, 1, 10);
+is $return, 1, 'Slicing to an uninitialized slice works';
+is($other_slice, ('x' x 10), 'Slice matches text');
+
 done_testing;
