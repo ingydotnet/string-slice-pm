@@ -26,7 +26,7 @@ test:
 devel:
   git: https://github.com/ingydotnet/string-slice-pm
   bug: https://github.com/ingydotnet/string-slice-pm/issues
-  irc: irc.perl.org#inline
+  irc: irc.freenode.net#pegex
 
 badge: travis
 
