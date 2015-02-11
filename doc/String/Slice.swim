@@ -2,34 +2,42 @@
 
 = Synopsis
 
+  # Exports 'slice':
   use String::Slice;
 
-  my $buffer = fetch_enormous_string;
-  my $slice;
+  # String::Slice is for parsing across huge strings:
+  my $buffer = get_large_buffer;
 
-  # Make $slice reference chars 101-125 of $buffer
-  slice($slice, $buffer, 101, 25);
+  # Make an SV to turn into a slice:
+  my $slice = '';
 
-  # Make $slice reference chars 126-175 of $buffer
-  slice($slice, $buffer, 25, 50);
+  # Move (parse) forward across the $buffer in small increments:
+  for (my $pos = 0; $pos <= length $buffer;) {
 
-  # Make $slice reference chars 120 to end of $buffer
-  slice($slice, $buffer, -6);
+    # $pos is the current postion in buffer.
+    # $slice retains info from previous call:
+    slice($slice, $buffer, $pos);
 
-  # Look for $pattern in $buffer,
-  # at each 100 byte starting point
-  $slice = '';    # Reset $slice
-  for (my $i = 0; slice($slice, $buffer, $i); $i += 100) {
-    if ($slice =~ /^$pattern/) { ... do it ... }
+    # front-anchored means /\A…/
+    my $regex = get_small_front_anchored_regex;
+
+    # Match may fail. Stay at same $pos if fail:
+    $slice =~ $regex or next;
+
+    # Add length of match:
+    $pos += $+[0];
   }
 
 = Description
 
 Processing large strings in Perl is inefficient because to access any smaller
-portion of a buffer you need to make a copy of that portion.
+portion of a buffer you need to make a copy of that portion. Also finding
+substr offsets in large utf8 strings requires looping, since each character
+can have a varying length.
 
-This module lets you make a string scalar point to a portion of the content of
-another string scalar.
+This module lets you make a string scalar (a "slice") point to a portion of
+the content of another string scalar. Finding the next slice is based on the
+position of the previous slice, so hopping over utf8 is much faster.
 
 The primary goal of this module is to make the parsing large data much faster
 in Perl.
@@ -41,19 +49,25 @@ different ways:
 
   slice($slice_variable, $big_buffer_variable, $char_offset, $char_length)
 
-This effectively makes `$slice_variable` a substr of the buffer. The offset
-defaults to 0, and if no length is given, the slice goes to the end of the
-buffer. One side effect of this function is that both strings will become
-readonly, and the memory will not be freed until they both go out of scope.
+This effectively makes `$slice_variable` a substr of the buffer, providing a
+faster, and more memory efficient way of doing:
+
+  $slice_variable = substr($big_buffer_variable, $char_offset, $char_length);
+
+The offset defaults to 0, and if no length is given, the slice goes to the end
+of the buffer.
 
 If `$slice` is already a slice of `$buffer` then this call:
 
   slice($slice, $buffer, $offset, $length)
 
-will move the offset forward by the specified number (or backwards if the
-offset is negative).
+will subtract the previous offset (stashed in the slice internally) from the
+current offset and hop the difference. (This may be forwards or backwards).
 
 If length is too long, the slice will go to the end of the buffer.
+
+One side effect of this function is that both strings will become readonly,
+and the memory will not be freed until they both go out of scope.
 
 The `slice` function returns 1 on success and 0 on failure. Failure occurs if
 the requested offset is invalid (less than the start or greater than or equal
@@ -61,7 +75,9 @@ to the end of the buffer).
 
 = Credit
 
-Thanks go out to Jan Dubois and Florian Ragwitz for help on how to do this
-right.
+These people provided invaluable help:
+
+* Jan Dubois
+* Florian Ragwitz
 
 <<<cpan-tail>>>

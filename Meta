@@ -1,7 +1,7 @@
 =meta: 0.0.1
 
 name: String-Slice
-version: 0.04
+version: 0.05
 abstract: Shared Memory Slices of Bigger Strings
 homepage: https://metacpan.org/release/String-Slice
 language: perl
