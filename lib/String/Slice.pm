@@ -10,6 +10,9 @@ our $VERSION = '0.06';
 use Exporter 'import';
 our @EXPORT = qw(slice);
 
+use Config;
+use Inline C => Config => ccflags => $Config::Config{ccflags} . " -Wall";
+
 use String::Slice::Inline C => <<'...';
 int slice (SV* dummy, ...) {
   dVAR; dXSARGS;
