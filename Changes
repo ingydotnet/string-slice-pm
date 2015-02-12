@@ -1,6 +1,6 @@
 ---
 version: 0.07
-date:    
+date:    Thu Feb 12 14:32:00 PST 2015
 changes:
 - Make much faster than substr for ascii buffers -- alh++
 - Benchmarks seem to indicate that anyway
