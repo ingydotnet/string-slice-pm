@@ -30,7 +30,6 @@ int slice (SV* dummy, ...) {
 
     // Set up local variables:
     U8* slice_ptr = SvPVX(slice);
-    U8* slice_end;
     I32 slice_off;
 
     U8* string_ptr = SvPVX(string);
@@ -47,6 +46,9 @@ int slice (SV* dummy, ...) {
     if (slice_ptr < string_ptr || slice_ptr > string_end) {
       // Link the refcnt of string to slice:  (rafl++)
       sv_magicext(slice, string, PERL_MAGIC_ext, NULL, NULL, 0);
+
+      // Special way to tell perl it doesn't own the slice memory:  (jdb++)
+      SvLEN_set(slice, 0);
 
       // Make slice be utf8 if string is utf8:
       if (SvUTF8(string))
@@ -86,21 +88,17 @@ int slice (SV* dummy, ...) {
       // Set the slice character offset (sneaky hack into IV slot):
       SvIVX(slice) = offset;
 
-      // Calculate the proper byte length for the utf8 slice:
+      // Calculate and set the proper byte length for the utf8 slice:
 
       // If requested number of chars is negative (default) or too big,
       // use the entire remainder of the string:
-      if (length < 0 || length >= utf8_distance(string_end, slice_ptr))
-        slice_end = string_end;
+      if (length < 0 || length >= utf8_distance(string_end, slice_ptr)) {
+        SvCUR_set(slice, string_end - slice_ptr);
+      }
       // Else find the end of utf8 slice:
-      else
-        slice_end = utf8_hop(slice_ptr, length);
-
-      // Set the length of the slice buffer in bytes:
-      SvCUR_set(slice, slice_end - slice_ptr);
-
-      // Special way to tell perl it doesn't own the slice memory:  (jdb++)
-      SvLEN_set(slice, 0);
+      else {
+        SvCUR_set(slice, utf8_hop(slice_ptr, length) - slice_ptr);
+      }
 
       // Success:
       return 1;
