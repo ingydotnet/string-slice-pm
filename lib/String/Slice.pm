@@ -5,7 +5,7 @@
 use strict;
 package String::Slice;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 use Exporter 'import';
 our @EXPORT = qw(slice);
@@ -44,7 +44,7 @@ int slice (SV* dummy, ...) {
 #endif
 
     // Is this a new slice? Start at beginning of string:
-    if (slice_ptr < string_ptr || slice_ptr >= string_end) {
+    if (slice_ptr < string_ptr || slice_ptr > string_end) {
       // Link the refcnt of string to slice:  (rafl++)
       sv_magicext(slice, string, PERL_MAGIC_ext, NULL, NULL, 0);
 

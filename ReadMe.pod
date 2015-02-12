@@ -15,7 +15,7 @@ String::Slice - Shared Memory Slices of Bigger Strings
 
 =head1 Version
 
-This document describes L<String::Slice> version B<0.05>.
+This document describes L<String::Slice> version B<0.06>.
 ";
 
 =head1 Synopsis

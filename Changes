@@ -1,4 +1,9 @@
 ---
+version: 0.06
+date:    Wed Feb 11 19:05:31 PST 2015
+changes:
+- Fix off by one bug. vicash++
+---
 version: 0.05
 date:    Wed Feb 11 11:11:17 PST 2015
 changes:
