@@ -70,8 +70,12 @@ int slice (SV* dummy, ...) {
       slice_off = SvIVX(slice);
     }
 
-    // Hop to the new offset:
-    slice_ptr = utf8_hop(base_ptr, (offset - slice_off));
+    if (SvUTF8(string)) {
+      // Hop to the new offset:
+      slice_ptr = utf8_hop(base_ptr, (offset - slice_off));
+    } else {
+      slice_ptr = base_ptr + (offset - slice_off);
+    }
 
     // New offset is out of bounds. Handle failure:
     if (slice_ptr < string_ptr || slice_ptr > string_end) {
@@ -95,12 +99,18 @@ int slice (SV* dummy, ...) {
 
       // If requested number of chars is negative (default) or too big,
       // use the entire remainder of the string:
-      if (length < 0 || length >= utf8_distance(string_end, slice_ptr)) {
-        SvCUR_set(slice, string_end - slice_ptr);
-      }
-      // Else find the end of utf8 slice:
-      else {
-        SvCUR_set(slice, utf8_hop(slice_ptr, length) - slice_ptr);
+      if (SvUTF8(string)) {
+        if (length < 0 || length >= utf8_distance(string_end, slice_ptr)) {
+          SvCUR_set(slice, string_end - slice_ptr);
+        }
+        // Else find the end of utf8 slice:
+        else
+          SvCUR_set(slice, utf8_hop(slice_ptr, length) - slice_ptr);
+      } else {
+        if (length < 0 || length >= string_end - slice_ptr)
+          SvCUR_set(slice, string_end - slice_ptr);
+        else
+          SvCUR_set(slice, length);
       }
 
       // Success:
