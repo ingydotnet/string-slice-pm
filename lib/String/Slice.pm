@@ -5,7 +5,7 @@
 use strict;
 package String::Slice;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 use Exporter 'import';
 our @EXPORT = qw(slice);
@@ -97,17 +97,17 @@ int slice (SV* dummy, ...) {
 
       // Calculate and set the proper byte length for the utf8 slice:
 
-      // If requested number of chars is negative (default) or too big,
-      // use the entire remainder of the string:
-      if (SvUTF8(string)) {
-        if (length < 0 || length >= utf8_distance(string_end, slice_ptr)) {
+      if (length < 0) {
+          SvCUR_set(slice, string_end - slice_ptr);
+      }
+      else if (SvUTF8(string)) {
+        if (length >= utf8_distance(string_end, slice_ptr)) {
           SvCUR_set(slice, string_end - slice_ptr);
         }
-        // Else find the end of utf8 slice:
         else
           SvCUR_set(slice, utf8_hop(slice_ptr, length) - slice_ptr);
       } else {
-        if (length < 0 || length >= string_end - slice_ptr)
+        if (length >= string_end - slice_ptr)
           SvCUR_set(slice, string_end - slice_ptr);
         else
           SvCUR_set(slice, length);

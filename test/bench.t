@@ -8,10 +8,10 @@ use String::Slice;
 if ($ENV{PERL_STRING_SLICE_BENCHMARK}) {
     my $count = 200;
 
-    # my $string = 'o' x 1024 x $count;
-    # my $string2 = 'o' x 1024 x $count;
-    use utf8; my $string = 'ö' x 1024 x $count;
-    use utf8; my $string2 = 'ö' x 1024 x $count;
+    my $string = 'o' x 1024 x $count;
+    my $string2 = 'o' x 1024 x $count;
+    # use utf8; my $string = 'ö' x 1024 x $count;
+    # use utf8; my $string2 = 'ö' x 1024 x $count;
 
     my $slice = '';
     my $var = 0;
