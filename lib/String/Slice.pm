@@ -32,13 +32,13 @@ int slice (SV* dummy, ...) {
     dXSTARG;
 
     // Set up local variables:
-    U8* slice_ptr = SvPVX(slice);
+    U8* slice_ptr = (U8 *)SvPVX(slice);
     I32 slice_off;
 
-    U8* string_ptr = SvPVX(string);
-    U8* string_end = SvEND(string);
+    U8* string_ptr = (U8 *)SvPVX(string);
+    U8* string_end = SvEND((char *)string);
 
-    U8* base_ptr;
+    U8* base_ptr = (U8 *)0;
 
     // Force string and slice to be string-type-scalars (SVt_PV):
 #if PERL_VERSION > 18
@@ -71,7 +71,11 @@ int slice (SV* dummy, ...) {
     }
 
     // Hop to the new offset:
-    slice_ptr = utf8_hop(base_ptr, (offset - slice_off));
+    if ((offset - slice_off) > 0) {
+        slice_ptr = utf8_hop(base_ptr, (offset - slice_off));
+    } else {
+        // do some error checking here
+    }
 
     // New offset is out of bounds. Handle failure:
     if (slice_ptr < string_ptr || slice_ptr > string_end) {
