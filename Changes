@@ -1,4 +1,9 @@
 ---
+version: 0.08
+date:    Fri Feb 13 21:05:28 PST 2015
+changes:
+- Don't use dXSTARG. bulk88++
+---
 version: 0.07
 date:    Thu Feb 12 14:32:00 PST 2015
 changes:

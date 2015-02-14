@@ -5,7 +5,7 @@
 use strict;
 package String::Slice;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 use Exporter 'import';
 our @EXPORT = qw(slice);
@@ -29,7 +29,6 @@ int slice (SV* dummy, ...) {
     SV* string = ST(1);
     I32 offset = items < 3 ? 0 : (I32)SvIV(ST(2));
     STRLEN length = items < 4 ? -1 : (STRLEN)SvUV(ST(3));
-    dXSTARG;
 
     // Set up local variables:
     U8* slice_ptr = SvPVX(slice);
