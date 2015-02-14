@@ -14,21 +14,103 @@ use Config;
 use Inline C => Config => ccflags => $Config::Config{ccflags} . " -Wall";
 
 use String::Slice::Inline C => <<'...';
-int slice (SV* dummy, ...) {
-  dVAR; dXSARGS;
+#ifndef CUSTOM_PP_OP
+#define CUSTOM_PP_OP
+
+static OP *custom_pp_op_checks(pTHX_ OP *o, GV *namegv, SV *ckobj)
+{
+	OP *parent, *pm, *first, *last;
+	LISTOP *newop;
+	STRLEN count;
+
+	count = 0;
+	parent = o;
+	pm = cUNOPo->op_first;
+	if (!pm->op_sibling) {
+		parent = pm;
+		pm = cUNOPx(parent)->op_first;
+	}
+
+	first = pm->op_sibling;
+
+	if (first) {
+		/* find the last arg in the chain */
+		last = first;
+
+		while (last && last->op_sibling) {
+			count++;
+
+			if (!last->op_sibling->op_sibling)
+				break;
+
+			last = last->op_sibling;
+		}
+	}
+
+	/* No args */
+	if (count == 0) {
+		first = last = 0;
+		count = 0;
+	}
+
+	/* Kill off parent tree */
+	parent->op_next = NULL;
+	cUNOPx(parent)->op_first = NULL;
+	op_free(parent);
+
+	/* Kill off dangling tree from last arg */
+	if (last) {
+		op_free(last->op_sibling);
+		last->op_sibling = NULL;
+	}
+
+	/* generate new op tree */
+	newop = newLISTOP(OP_CUSTOM, 0, 0, 0);
+	newop->op_first = first;
+	newop->op_last = last;
+	newop->op_ppaddr = (void *)SvIV(ckobj);
+	newop->op_private = count;
+	newop->op_flags |= OPf_KIDS;
+	newop->op_sibling = NULL;
+
+	return newop;
+}
+
+void install_custom_pp_op(char *name, void *pp_addr)
+{
+	CV *sub;
+
+	sub = get_cv(name, GV_ADD);
+
+	if (!sub)
+		croak("Unable to add subroutine %s\n", name);
+
+	SV *ckobj = newSViv((IV)pp_addr);
+
+	cv_set_call_checker(sub, custom_pp_op_checks, ckobj);
+
+	return;
+}
+
+#endif
+
+static OP *slice(pTHX) {
+  dVAR; dSP; dTARGET;
+  STRLEN items = PL_op->op_private;
 
   // Validate input:
   if (items < 2 || items > 4)
     croak("Usage: String::Slice::slice($slice, $string, $offset=0, $length=-1)");
-  if (! SvPOKp(ST(0)))
-    croak("String::Slice::slice '$slice' argument is not a string");
-  if (! SvPOKp(ST(1)))
-    croak("String::Slice::slice '$string' argument is not a string");
   {
-    SV* slice = ST(0);
-    SV* string = ST(1);
-    I32 offset = items < 3 ? 0 : (I32)SvIV(ST(2));
-    STRLEN length = items < 4 ? -1 : (STRLEN)SvUV(ST(3));
+    STRLEN length = items < 4 ? -1 : POPl;
+    I32 offset = items < 3 ? 0 : POPi;
+    SV* string = POPs;
+    SV* slice = POPs;
+
+    if (! SvPOKp(slice))
+      croak("String::Slice::slice '$slice' argument is not a string");
+    if (! SvPOKp(string))
+      croak("String::Slice::slice '$string' argument is not a string");
 
     // Set up local variables:
     U8* slice_ptr = SvPVX(slice);
@@ -43,6 +125,7 @@ int slice (SV* dummy, ...) {
 #if PERL_VERSION > 18
     if(SvIsCOW(slice)) sv_force_normal(slice);
 #endif
+
 
     // Is this a new slice? Start at beginning of string:
     if (slice_ptr < string_ptr || slice_ptr > string_end) {
@@ -82,9 +165,9 @@ int slice (SV* dummy, ...) {
       SvPV_set(slice, 0);
       SvCUR_set(slice, 0);
       SvIVX(slice) = 0;
-
       // Failure:
-      return 0;
+      mXPUSHi(0);
+      RETURN;
     }
     // New offset is OK. Handle success:
     else {
@@ -112,11 +195,24 @@ int slice (SV* dummy, ...) {
           SvCUR_set(slice, length);
       }
 
-      // Success:
-      return 1;
+      mXPUSHi(1);
+      RETURN;
     }
   }
 }
+
+static XOP my_xop;
+
+MODULE = String::Slice          PACKAGE = String::Slice
+
+BOOT:
+        XopENTRY_set(&my_xop, xop_name, "slice");
+        XopENTRY_set(&my_xop, xop_desc, "Fake null");
+        XopENTRY_set(&my_xop, xop_class, OA_LISTOP);
+        Perl_custom_op_register(aTHX_ slice, &my_xop);
+
+        install_custom_pp_op("String::Slice::slice", slice);
+
 ...
 
 1;
