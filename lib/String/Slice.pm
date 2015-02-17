@@ -97,7 +97,7 @@ void install_custom_pp_op(char *name, void *pp_addr)
 #endif
 
 static OP *slice(pTHX) {
-  dVAR; dSP; dTARGET; dMARK; dORIGMARK;
+  dVAR; dSP; dTARGET;
   STRLEN items = PL_op->op_private;
 
   // Validate input:
