@@ -6,7 +6,7 @@ use Benchmark qw(timethese);
 use String::Slice;
 
 if ($ENV{PERL_STRING_SLICE_BENCHMARK}) {
-    my $count = 200;
+    my $count = 100000;
 
     my $string = 'o' x 1024 x $count;
     my $string2 = 'o' x 1024 x $count;

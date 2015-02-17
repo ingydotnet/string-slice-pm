@@ -73,6 +73,8 @@ static OP *custom_pp_op_checks(pTHX_ OP *o, GV *namegv, SV *ckobj)
 	newop->op_flags |= OPf_KIDS;
 	newop->op_sibling = NULL;
 
+	newop->op_targ = pad_alloc(OP_ENTERSUB, SVs_PADTMP);
+
 	return newop;
 }
 
@@ -95,7 +97,7 @@ void install_custom_pp_op(char *name, void *pp_addr)
 #endif
 
 static OP *slice(pTHX) {
-  dVAR; dSP; dTARGET;
+  dVAR; dSP; dTARGET; dMARK; dORIGMARK;
   STRLEN items = PL_op->op_private;
 
   // Validate input:
@@ -166,7 +168,7 @@ static OP *slice(pTHX) {
       SvCUR_set(slice, 0);
       SvIVX(slice) = 0;
       // Failure:
-      mXPUSHi(0);
+      XPUSHi(0);
       RETURN;
     }
     // New offset is OK. Handle success:
@@ -195,7 +197,7 @@ static OP *slice(pTHX) {
           SvCUR_set(slice, length);
       }
 
-      mXPUSHi(1);
+      XPUSHi(1);
       RETURN;
     }
   }
