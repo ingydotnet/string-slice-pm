@@ -78,7 +78,7 @@ static OP *custom_pp_op_checks(pTHX_ OP *o, GV *namegv, SV *ckobj)
 	return newop;
 }
 
-void install_custom_pp_op(char *name, void *pp_addr)
+void install_custom_pp_op(pTHX_ char *name, void *pp_addr)
 {
 	CV *sub;
 
@@ -213,7 +213,7 @@ BOOT:
         XopENTRY_set(&my_xop, xop_class, OA_LISTOP);
         Perl_custom_op_register(aTHX_ slice, &my_xop);
 
-        install_custom_pp_op("String::Slice::slice", slice);
+        install_custom_pp_op(aTHX_ "String::Slice::slice", slice);
 
 ...
 
