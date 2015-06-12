@@ -6,7 +6,7 @@ use Benchmark qw(timethese);
 use String::Slice;
 
 if ($ENV{PERL_STRING_SLICE_BENCHMARK}) {
-    my $count = 200;
+    my $count = shift || 1000;
 
     my $string = 'o' x 1024 x $count;
     my $string2 = 'o' x 1024 x $count;
@@ -16,7 +16,7 @@ if ($ENV{PERL_STRING_SLICE_BENCHMARK}) {
     my $slice = '';
     my $var = 0;
 
-    timethese(1, {
+    timethese($count, {
         'substr' => sub {
             # substr 10 chars at a time:
             for (my $i = 0; $i < length($string2) - 10; $i += 10) {
@@ -31,6 +31,9 @@ if ($ENV{PERL_STRING_SLICE_BENCHMARK}) {
             }
         },
     });
+}
+else {
+  diag "env PERL_STRING_SLICE_BENCHMARK not set";
 }
 
 pass 'Just a benchmarking test';
